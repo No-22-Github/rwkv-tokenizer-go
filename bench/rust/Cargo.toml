@@ -1,0 +1,8 @@
+[package]
+name = "rwkv-reference-bench"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+rwkv-tokenizer = { git = "https://github.com/cahya-wirawan/rwkv-tokenizer", rev = "63b21e891d0c8efd95997d797049bb7f92098d8c" }

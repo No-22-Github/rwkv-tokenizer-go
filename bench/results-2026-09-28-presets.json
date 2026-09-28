@@ -1,0 +1,158 @@
+[
+  {
+    "preset": "speed",
+    "corpus": "/tmp/corpus.txt",
+    "sha256": "aae3baa3325f10f0ff5c51749485d538e456715c2c5b920442837bccbbc0745b",
+    "batch": 0,
+    "threads": 10,
+    "iters": 50,
+    "samples": {
+      "rust": [
+        254.8,
+        251.1,
+        251.5
+      ],
+      "go": [
+        263.2,
+        262.6,
+        260.9
+      ],
+      "baseline": [
+        264.8,
+        264.1,
+        264.0
+      ]
+    },
+    "median": {
+      "rust": 251.5,
+      "go": 262.6,
+      "baseline": 264.1
+    }
+  },
+  {
+    "preset": "speed",
+    "corpus": "/tmp/corpus.txt",
+    "sha256": "aae3baa3325f10f0ff5c51749485d538e456715c2c5b920442837bccbbc0745b",
+    "batch": 64,
+    "threads": 10,
+    "iters": 50,
+    "samples": {
+      "rust": [
+        1493.0,
+        1309.7,
+        1302.4
+      ],
+      "go": [
+        1636.1,
+        1495.2,
+        1448.7
+      ],
+      "baseline": [
+        1137.5,
+        1530.4,
+        1216.4
+      ]
+    },
+    "median": {
+      "rust": 1309.7,
+      "go": 1495.2,
+      "baseline": 1216.4
+    }
+  },
+  {
+    "preset": "balanced",
+    "corpus": "/tmp/corpus.txt",
+    "sha256": "aae3baa3325f10f0ff5c51749485d538e456715c2c5b920442837bccbbc0745b",
+    "batch": 0,
+    "threads": 10,
+    "iters": 50,
+    "samples": {
+      "rust": [
+        227.3,
+        244.4,
+        229.3
+      ],
+      "go": [
+        244.1,
+        247.2,
+        237.8
+      ]
+    },
+    "median": {
+      "rust": 229.3,
+      "go": 244.1
+    }
+  },
+  {
+    "preset": "balanced",
+    "corpus": "/tmp/corpus.txt",
+    "sha256": "aae3baa3325f10f0ff5c51749485d538e456715c2c5b920442837bccbbc0745b",
+    "batch": 64,
+    "threads": 10,
+    "iters": 50,
+    "samples": {
+      "rust": [
+        1254.4,
+        1364.2,
+        1362.2
+      ],
+      "go": [
+        1303.9,
+        1410.5,
+        1367.1
+      ]
+    },
+    "median": {
+      "rust": 1362.2,
+      "go": 1367.1
+    }
+  },
+  {
+    "preset": "memory",
+    "corpus": "/tmp/corpus.txt",
+    "sha256": "aae3baa3325f10f0ff5c51749485d538e456715c2c5b920442837bccbbc0745b",
+    "batch": 0,
+    "threads": 10,
+    "iters": 50,
+    "samples": {
+      "rust": [
+        208.7,
+        245.3,
+        249.1
+      ],
+      "go": [
+        174.3,
+        175.1,
+        181.9
+      ]
+    },
+    "median": {
+      "rust": 245.3,
+      "go": 175.1
+    }
+  },
+  {
+    "preset": "memory",
+    "corpus": "/tmp/corpus.txt",
+    "sha256": "aae3baa3325f10f0ff5c51749485d538e456715c2c5b920442837bccbbc0745b",
+    "batch": 64,
+    "threads": 10,
+    "iters": 50,
+    "samples": {
+      "rust": [
+        1463.8,
+        1463.6,
+        1430.5
+      ],
+      "go": [
+        1101.3,
+        1108.3,
+        1099.2
+      ]
+    },
+    "median": {
+      "rust": 1463.6,
+      "go": 1101.3
+    }
+  }
+]

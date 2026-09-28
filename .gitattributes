@@ -1,0 +1,2 @@
+# These fixtures intentionally preserve trailing spaces, tabs and CRLF pairs.
+testdata/*.txt -whitespace

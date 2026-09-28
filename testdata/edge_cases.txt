@@ -1,0 +1,39 @@
+Today is a beautiful day. 今天是美好的一天。
+0
+1
+ 
+00
+11
+  
+000
+111
+   
+0000000000000000000000000000000000000000000000000000000000000000
+1111111111111111111111111111111111111111111111111111111111111111
+                                                                
+																																																																
+12345678901234567890123456789012345678901234567890123456789012345678901234567890
+3.14159265358979323846264338327950288419716939937510582097494459
+don't can't won't it's 'quoted' "double" b'notbyte' b'\x41'
+\n \t \x41 \u0041 literal escapes
+😀😃😄😁😆😅😂🤣😊😇🙂🙃😉😌😍🥰😘😗😙😚
+👨‍👩‍👧‍👦 flag: 🇺🇸🇯🇵 combining: é é̊
+﷐﷑﷒﷓﷔﷕﷖﷗﷘﷙﷚﷛ noncharacters U+FFFE￾ U+FFFF￿
+غظxford ةيبرع تاملك Русский язык Ξενοφώντος
+กษัตริย์ก่อนหน้าแลถัดไป สององค์ไซร้โง่เขลาเบาปัญญา
+我能吞下玻璃而不伤身体。我能吞下玻璃而不傷身體。
+ᐊᓕᒍᖅ ᓂᕆᔭᕌᖓᒃᑯ ᓱᕋᙱᑦᑐᓐᓇᖅᑐᖓ
+⡍⠜⠇⠑⠹ ⠺⠁⠎ ⠙⠑⠁⠙⠒ ⠞⠕ ⠃⠑⠛⠔ ⠺⠊⠹⠲
+ΠΟΛΥΤΡΟΠΟΣ κόσμε ᾿Ελευθεριά
+func (t *Tokenizer) Encode(text string) []int32 { return t.AppendEncode(nil, text) }
+if err != nil { return nil, fmt.Errorf("rwkv: vocab line %d: %w", lineNo+1, err) }
+      indented code block with trailing spaces   
+
+line after CRLF
+another CRLF line
+
+repeat repeat repeat repeat repeat repeat repeat repeat repeat repeat
+eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn
+ t t t t t t t t t t t t t t t t t t t t t t t t t t t t t t t t t t t t t t t t t t t t t t t t t t
+日本語のテキストです。スターシップが打ち上げられた。
