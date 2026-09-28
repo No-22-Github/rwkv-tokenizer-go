@@ -27,7 +27,12 @@ python3 bench/compare.py \
 `CORPUS_GOROOT` when reproducing the exact Go source corpus. The comparison
 script records input and vocabulary SHA-256 hashes, compiler versions, host
 information, token counts and raw samples. `plot_results.py` renders the README
-chart from the JSONL output. It requires Python Matplotlib.
+charts (SVG, standard library only) from the JSONL output:
+
+```sh
+python3 bench/plot_results.py bench/readme-results.jsonl bench/throughput.svg
+python3 bench/plot_results.py bench/readme-results.jsonl bench/throughput.zh.svg --lang zh
+```
 
 The committed JSON results and PNG chart are a dated local measurement on the
 Apple M5 test host. They are intended for transparent comparison, not as a

@@ -1,157 +1,216 @@
 # rwkv-tokenizer-go
 
-A pure-Go implementation of the RWKV **World** tokenizer used by RWKV v5/v6
-models, ported from the reference Rust implementation
-[cahya-wirawan/rwkv-tokenizer](https://github.com/cahya-wirawan/rwkv-tokenizer).
-It produces **byte-for-byte identical token ids** to the Rust tokenizer
-(verified against its output on a 4 MB mixed-language corpus and its own test
-vectors), with measured throughput on the 4.1 MB mixed corpus at ~104% of the Rust
-build for single-thread encoding and ~115% for parallel batch encoding.
+[![Go Reference](https://pkg.go.dev/badge/github.com/No-22-Github/rwkv-tokenizer-go.svg)](https://pkg.go.dev/github.com/No-22-Github/rwkv-tokenizer-go)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+
+**English** · [简体中文](README.zh-CN.md)
+
+A fast, pure-Go implementation of the **RWKV World tokenizer** (RWKV v5/v6 and
+later). It produces token ids that are byte-for-byte identical to the original
+Rust implementation, embeds the standard vocabulary, and has zero dependencies.
 
 ```go
-tok, _ := rwkv.New() // vocab embedded, no external files needed
+tok, _ := rwkv.New() // standard vocab is embedded, no files needed
 ids := tok.Encode("Today is a beautiful day. 今天是美好的一天。")
 // [33520 4600 332 59219 21509 47 33 10381 11639 13091 15597 11685 14734 10250 11639 10080]
 text, _ := tok.Decode(ids)
 ```
 
-## Features
+## Highlights
 
-- **Zero dependencies**, pure Go. The standard vocab (`rwkv_vocab_v20230424.txt`,
-  65,529 tokens) is embedded via `go:embed`; custom vocab files load through
-  `NewFromFile` / `NewFromReader`.
-- **Faithful algorithm**: greedy longest-prefix match over a byte trie, exactly
-  like the reference; no BPE, no pretokenization. Byte tokens (`b'\xNN'`)
-  guarantee every input byte is encodable, so raw and even invalid-UTF-8 input
-  round-trips through `EncodeBytes` / `DecodeBytes`.
-- **Fast**: flat, GC-invisible trie (int32 indices, 16-byte nodes, direct
-  256-entry child tables for branching nodes), allocation-light hot path,
-  `EncodeBatch` parallelizes across all cores.
-- **Concurrent use**: a `Tokenizer` is read-only after construction and safe
-  for use from multiple goroutines.
+- **Exact** — same ids as the Rust original, verified on a 4.1 MB
+  multilingual corpus, ~40 edge cases and its own test vectors.
+- **Fast** — 1.04× the Rust original single-threaded and 1.15× with parallel
+  batch encoding (Apple M5, default preset).
+- **Zero dependencies** — pure Go; the 65,529-token vocab
+  `rwkv_vocab_v20230424.txt` is built in via `go:embed`. Custom vocab files are
+  supported too.
+- **Tunable memory** — three presets trade trie memory (16.2 → 2.3 MiB) for
+  speed, with identical output.
+- **Lossless on any bytes** — every byte has a fallback token, so raw and even
+  invalid UTF-8 input round-trips through `EncodeBytes` / `DecodeBytes`.
+- **Concurrency-safe** — a `Tokenizer` is immutable after construction; share
+  one across goroutines.
+
+<p align="center">
+  <img src="bench/throughput.svg" alt="Encode throughput and trie memory: Rust original vs the three Go presets" width="920">
+</p>
+
+## Using in a Go project
+
+```sh
+go get github.com/No-22-Github/rwkv-tokenizer-go
+```
+
+Requires Go 1.24 or later. The package name is `rwkv`:
+
+```go
+import rwkv "github.com/No-22-Github/rwkv-tokenizer-go"
+```
+
+Basic usage:
+
+```go
+tok, err := rwkv.New()
+if err != nil {
+	log.Fatal(err)
+}
+
+ids := tok.Encode("Hello, RWKV!")        // text -> []int32
+text, err := tok.Decode(ids)             // []int32 -> text (validates UTF-8)
+
+buf = tok.AppendEncode(buf[:0], line)    // reuse a []int32 buffer in hot loops
+all := tok.EncodeBatch(docs)             // encode many texts on all cores
+
+raw := tok.EncodeBytes([]byte{0xff, 0xfe}) // arbitrary bytes, UTF-8 not required
+b, _ := tok.DecodeBytes(raw)               // -> []byte{0xff, 0xfe}
+```
+
+Load a custom vocabulary in the same [format](#vocab-format):
+
+```go
+tok, err := rwkv.NewFromFile("my_vocab.txt")
+```
 
 ## Presets
 
-Choose the memory/throughput tradeoff when creating a tokenizer:
+Pick the memory/speed tradeoff once, at construction time. All presets produce
+the same ids and work with custom vocabularies.
 
 ```go
-fast, err := rwkv.New() // defaults to PresetSpeed
-balanced, err := rwkv.New(rwkv.WithPreset(rwkv.PresetBalanced))
-small, err := rwkv.New(rwkv.WithPreset(rwkv.PresetMemory))
-
-// The same option works with custom vocabularies.
-tok, err := rwkv.NewFromFile("vocab.txt", rwkv.WithPreset(rwkv.PresetMemory))
-fmt.Println(tok.Preset()) // memory
+tok, _ := rwkv.New()                                        // PresetSpeed (default)
+tok, _ := rwkv.New(rwkv.WithPreset(rwkv.PresetBalanced))
+tok, _ := rwkv.NewFromFile("vocab.txt", rwkv.WithPreset(rwkv.PresetMemory))
 ```
 
-| Preset | CLI value | Standard-vocab trie memory | Layout |
-|---|---|---:|---|
-| `PresetSpeed` (default) | `speed` | 16.23 MiB | Direct tables for every branching node |
-| `PresetBalanced` | `balanced` | 3.34 MiB | Direct tables for large branches, short edge lists elsewhere |
-| `PresetMemory` | `memory` | 2.31 MiB | Sorted edge lists; binary search for large branches |
+| Preset | CLI | Trie memory | Single / batch encode | Layout |
+|---|---|---:|---:|---|
+| `PresetSpeed` *(default)* | `speed` | 16.23 MiB | 258 / 1660 MB/s | Direct 256-entry table on every branching node |
+| `PresetBalanced` | `balanced` | 3.34 MiB | 245 / 1474 MB/s | Direct tables only for large branches, short edge lists elsewhere |
+| `PresetMemory` | `memory` | 2.31 MiB | 181 / 1080 MB/s | Sorted edge lists, binary search on large ones |
 
-Memory figures include retained trie storage and exclude token storage, temporary
-construction allocations, and allocator overhead. All presets retain the two-byte
-prefix shortcut. They produce identical token IDs, support the same custom
-vocabularies, and remain safe for concurrent use. Presets affect encoding speed
-and trie memory; they do not change the decoding algorithm or the vocabulary.
-The choice is fixed at construction time; reuse the tokenizer across calls.
-Unknown presets return an error. See [preset measurements](bench/PRESETS.md).
+**Rule of thumb:** keep the default for servers and batch jobs; use `balanced`
+when running many tokenizers in one process — it's ~5× smaller at ~95% of the
+speed; use `memory` for tight environments.
 
-## API
-
-```go
-func New(opts ...Option) (*Tokenizer, error)                       // embedded standard vocab
-func NewFromFile(path string, opts ...Option) (*Tokenizer, error)    // custom vocab file
-func NewFromReader(r io.Reader, opts ...Option) (*Tokenizer, error)
-func NewFromBytes(data []byte, opts ...Option) (*Tokenizer, error)
-
-func (t *Tokenizer) Encode(text string) []int32
-func (t *Tokenizer) AppendEncode(dst []int32, text string) []int32  // reuse buffer
-func (t *Tokenizer) EncodeBytes(data []byte) []int32                // raw bytes, no UTF-8 required
-func (t *Tokenizer) AppendEncodeBytes(dst []int32, data []byte) []int32
-func (t *Tokenizer) EncodeBatch(texts []string) [][]int32           // parallel
-func (t *Tokenizer) EncodeBatchBytes(datas [][]byte) [][]int32
-
-func (t *Tokenizer) Decode(ids []int32) (string, error)             // validates UTF-8
-func (t *Tokenizer) DecodeBytes(ids []int32) ([]byte, error)
-func (t *Tokenizer) VocabSize() int
-func (t *Tokenizer) Preset() Preset
-func WithPreset(preset Preset) Option
-```
-
-Behavioral notes, matching the reference implementation:
-
-- Token ids fit in `uint16` (World vocab ids are 1..65529); id 0 decodes to a
-  NUL byte placeholder.
-- `Decode` fails on ids outside the vocab or on byte sequences that are not
-  valid UTF-8; `DecodeBytes` skips the UTF-8 check.
-- The greedy matcher stops early only if a byte starts no token at all, which
-  cannot happen with the standard vocab (all 256 byte values have a token).
+Memory is the retained trie storage for the standard vocab (excluding token
+bytes and allocator overhead). An unknown preset returns an error. More in
+[bench/PRESETS.md](bench/PRESETS.md).
 
 ## CLI
 
-```
+```sh
 go install github.com/No-22-Github/rwkv-tokenizer-go/cmd/rwkv-tokenizer@latest
-
-echo "你好，世界" | rwkv-tokenizer encode                 # print token ids
-rwkv-tokenizer decode <<< "10381 11639 13091 ..."        # ids -> text
-rwkv-tokenizer bench -in corpus.txt -iters 20            # default speed preset
-rwkv-tokenizer bench -preset balanced -in corpus.txt -iters 20
-rwkv-tokenizer encode -preset memory -in corpus.txt      # lowest trie memory
-rwkv-tokenizer bench -in corpus.txt -iters 20 -batch 64  # parallel throughput
-rwkv-tokenizer dump -in corpus.txt -out ids.bin          # binary ids (u32 count + u32 LE)
 ```
+
+```sh
+echo "你好，世界" | rwkv-tokenizer encode                  # text -> ids
+rwkv-tokenizer decode <<< "10381 11639 13091"             # ids -> text
+rwkv-tokenizer encode -preset memory -in corpus.txt       # choose a preset
+rwkv-tokenizer bench -in corpus.txt -iters 20             # single-thread throughput
+rwkv-tokenizer bench -in corpus.txt -iters 20 -batch 64   # parallel throughput
+rwkv-tokenizer dump -in corpus.txt -out ids.bin           # binary: u32 count + u32 LE ids
+```
+
+All commands accept `-vocab FILE` for a custom vocabulary and `-preset`.
 
 ## Benchmarks
 
-The reproducible run used Apple M5, Go 1.27.1 and Rust 1.98.1, with the pinned
-reference at `63b21e89`. The corpus is 4,103,643 bytes and 1,348,484 tokens;
-results are the median of five interleaved 100-iteration runs after three
-warmups. Batch mode uses 64 newline-aligned chunks and 10 workers.
+Apple M5, Go 1.27.1, Rust 1.98.1. A 4.1 MB mixed corpus (mostly Go source
+code plus Chinese, Japanese and UTF-8 stress text; 1,348,484 tokens), median of five interleaved 100-iteration runs after
+warmup. Batch mode splits the input into 64 newline-aligned chunks on 10
+workers. Full token dumps are checked against Rust before any timing.
 
-![Throughput comparison](bench/throughput.png)
-
-The chart compares the pinned Rust reference with all three Go presets. The
-Rust implementation is the upstream `rwkv-tokenizer` API; Go uses the same
-vocabulary and verifies complete token dumps before timing. The current Go
-column uses `PresetSpeed`. The previous Go column is retained as historical
-context for the optimization work.
-
-| mode | Rust reference | Previous Go | Current Go | Go/Rust |
+| Mode | Rust original | Go `speed` | Go `balanced` | Go `memory` |
 |---|---:|---:|---:|---:|
-| encode, single thread | 249.2 MB/s | 230.8 MB/s | 258.2 MB/s | 103.6% |
-| encode-batch, 64 chunks | 1449.7 MB/s | 1344.9 MB/s | 1660.2 MB/s | 114.5% |
+| Single-thread encode | 249.2 MB/s | **258.2 MB/s** (1.04×) | 245.0 MB/s (0.98×) | 181.3 MB/s (0.73×) |
+| Batch encode, 64 chunks | 1449.7 MB/s | **1660.2 MB/s** (1.15×) | 1473.6 MB/s (1.02×) | 1080.3 MB/s (0.75×) |
 
-The speed preset uses direct lookup tables for all branching nodes and carries
-the loaded node between loop iterations. It retains the two-byte prefix shortcut.
-Retained trie storage increases from about 3.91 MiB to 16.23 MiB per tokenizer
-(excluding vocabulary token storage). These are local warm-throughput measurements,
-not universal language/runtime ratios. See
-[benchmark details and reproduction](bench/ROUND2.md) for memory usage,
-smaller corpora and API allocation differences.
+These are warm-throughput numbers from one machine, not a universal Go-vs-Rust
+ratio. Rust's batch API consumes its input, so its timed loop includes an input
+clone. Smaller fixtures, memory details and reproduction steps are in
+[bench/](bench/README.md) ([ROUND2.md](bench/ROUND2.md),
+[PRESETS.md](bench/PRESETS.md)).
+
+## How it's fast
+
+- A flat trie in a single array with `int32` indices and 16-byte nodes — no
+  pointers for the GC to scan.
+- Direct 256-entry child tables on branching nodes (`speed`) and a two-byte
+  prefix shortcut table in every preset.
+- An allocation-light hot loop that carries the current node across
+  iterations instead of reloading it.
+- `EncodeBatch` fans work out across `GOMAXPROCS` goroutines.
 
 ## Correctness
 
-- `TestEncodeBeautifulDay` checks the exact ids from the reference's test
-  suite.
-- `TestGoldenEdgeCases` compares against ids dumped from the Rust tokenizer
-  over ~40 edge-case inputs (newline/space/digit runs, quotes, emoji ZWJ,
-  noncharacters, CJK, box drawing, CRLF, …) — see `bench/generate.py`.
-- The full 4.1 MB corpus was verified byte-identical against the Rust dump.
-- Property tests round-trip random bytes (including invalid UTF-8) and a fuzz
-  target (`FuzzEncodeDecodeBytes`) enforces encode→decode == identity.
+- `TestEncodeBeautifulDay` checks the exact ids from the Rust original's test suite.
+- `TestGoldenEdgeCases` compares against ids dumped from the Rust tokenizer for
+  ~40 tricky inputs: whitespace/digit runs, quotes, emoji ZWJ sequences,
+  noncharacters, CJK, box drawing, CRLF, … (see `bench/generate.py`).
+- The full 4.1 MB corpus matches the Rust dump byte-for-byte under every preset.
+- A differential test against a brute-force greedy oracle over random
+  vocabularies, property tests on random (including invalid UTF-8) bytes, and
+  fuzz targets `FuzzEncodeDecodeBytes` / `FuzzPresetParity`.
+
+```sh
+go test ./...
+go test -race ./...
+```
+
+## API reference
+
+Every exported function and method at a glance. Full docs with comments are on
+[pkg.go.dev](https://pkg.go.dev/github.com/No-22-Github/rwkv-tokenizer-go).
+
+```go
+func New(opts ...Option) (*Tokenizer, error)                     // embedded standard vocab
+func NewFromFile(path string, opts ...Option) (*Tokenizer, error)
+func NewFromReader(r io.Reader, opts ...Option) (*Tokenizer, error)
+func NewFromBytes(data []byte, opts ...Option) (*Tokenizer, error)
+func WithPreset(preset Preset) Option
+
+func (t *Tokenizer) Encode(text string) []int32
+func (t *Tokenizer) AppendEncode(dst []int32, text string) []int32
+func (t *Tokenizer) EncodeBytes(data []byte) []int32
+func (t *Tokenizer) AppendEncodeBytes(dst []int32, data []byte) []int32
+func (t *Tokenizer) EncodeBatch(texts []string) [][]int32       // parallel
+func (t *Tokenizer) EncodeBatchBytes(datas [][]byte) [][]int32  // parallel
+
+func (t *Tokenizer) Decode(ids []int32) (string, error)         // validates UTF-8
+func (t *Tokenizer) DecodeBytes(ids []int32) ([]byte, error)    // no UTF-8 check
+func (t *Tokenizer) VocabSize() int
+func (t *Tokenizer) Preset() Preset
+```
+
+Behavior (same as the Rust original):
+
+- World vocab ids are 1..65529 and fit in `uint16`; id 0 decodes to a NUL byte.
+- `Decode` fails on ids outside the vocab or on output that is not valid UTF-8;
+  `DecodeBytes` skips the UTF-8 check.
+- Encoding is greedy longest-prefix match over a byte trie — no BPE merges, no
+  pre-tokenization.
 
 ## Vocab format
 
-Each line is `<id> (b?)'<python-escaped token>' <byte length>`; string tokens
-use Python repr escapes (`\xHH`, `\uHHHH`, `\UHHHHHHHH`, `\n`, `\t`, `\r`,
-`\\`, `\'`, `\"`), byte tokens are `\xHH` sequences of raw bytes. Files with
-this format load via `NewFromFile`.
+One token per line: `<id> <python-repr token> <byte length>`, for example
 
-## Attribution
+```
+34 '!' 1
+10381 '今' 3
+129 b'\x80' 1
+```
 
-- Algorithm ported from [cahya-wirawan/rwkv-tokenizer](https://github.com/cahya-wirawan/rwkv-tokenizer) (Apache-2.0).
-- Vocab file `rwkv_vocab_v20230424.txt` from [BlinkDL/RWKV-LM](https://github.com/BlinkDL/RWKV-LM) (Apache-2.0).
+String tokens use Python repr escapes (`\xHH`, `\uHHHH`, `\UHHHHHHHH`, `\n`,
+`\t`, `\r`, `\\`, `\'`, `\"`); `b'…'` tokens are raw bytes written as `\xHH`.
 
-Licensed under the Apache License, Version 2.0.
+## Acknowledgements
+
+- Algorithm and reference behavior from the Rust original,
+  [cahya-wirawan/rwkv-tokenizer](https://github.com/cahya-wirawan/rwkv-tokenizer) (Apache-2.0).
+- Vocabulary `rwkv_vocab_v20230424.txt` from
+  [BlinkDL/RWKV-LM](https://github.com/BlinkDL/RWKV-LM) (Apache-2.0).
+
+## License
+
+[Apache License 2.0](LICENSE)

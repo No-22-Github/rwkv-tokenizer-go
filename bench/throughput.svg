@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 318" width="920" height="318" font-family="-apple-system, BlinkMacSystemFont, &#x27;Segoe UI&#x27;, Helvetica, Arial, sans-serif" role="img" aria-label="RWKV World tokenizer: throughput and memory">
+<style>
+svg { --bg:#fcfcfb; --ink:#0b0b0b; --ink2:#52514e; --muted:#8a8984; --grid:#e6e5e0;
+      --rust:#8a8984; --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; }
+@media (prefers-color-scheme: dark) {
+  svg { --bg:#1a1a19; --ink:#ffffff; --ink2:#c3c2b7; --muted:#8f8e86; --grid:#33332f;
+        --rust:#8f8e86; --s1:#3987e5; --s2:#d95926; --s3:#199e70; }
+}
+.bg { fill: var(--bg); }
+.title { fill: var(--ink); font-size: 17px; font-weight: 650; }
+.panel { fill: var(--ink); font-size: 13px; font-weight: 600; }
+.label { fill: var(--ink2); font-size: 12px; }
+.value { fill: var(--ink); font-size: 12px; font-weight: 600; }
+.ratio { fill: var(--muted); font-size: 11px; }
+.note { fill: var(--muted); font-size: 11px; }
+.grid { stroke: var(--grid); stroke-width: 1; }
+</style>
+<rect class="bg" width="920" height="318" rx="12"/>
+<text class="title" x="24" y="38">RWKV World tokenizer: throughput and memory</text>
+<text class="label" x="24" y="106.0">Rust (original)</text>
+<text class="label" x="24" y="148.0">Go speed</text>
+<text class="label" x="24" y="190.0">Go balanced</text>
+<text class="label" x="24" y="232.0">Go memory</text>
+<text class="panel" x="142" y="74">Single-text encode · MB/s</text>
+<line class="grid" x1="142" y1="84" x2="142" y2="250"/>
+<path d="M143.0,92.0h144.6a4,4 0 0 1 4,4v12.0a4,4 0 0 1 -4,4h-144.6z" style="fill:var(--rust)"><title>Rust (original): 249</title></path>
+<text class="value" x="298.6" y="106.0">249</text>
+<path d="M143.0,134.0h150.0a4,4 0 0 1 4,4v12.0a4,4 0 0 1 -4,4h-150.0z" style="fill:var(--s1)"><title>Go speed: 258</title></path>
+<text class="value" x="304.0" y="148.0">258</text>
+<text class="ratio" x="304.0" y="163.0">1.04× vs Rust</text>
+<path d="M143.0,176.0h142.1a4,4 0 0 1 4,4v12.0a4,4 0 0 1 -4,4h-142.1z" style="fill:var(--s2)"><title>Go balanced: 245</title></path>
+<text class="value" x="296.1" y="190.0">245</text>
+<text class="ratio" x="296.1" y="205.0">0.98× vs Rust</text>
+<path d="M143.0,218.0h104.1a4,4 0 0 1 4,4v12.0a4,4 0 0 1 -4,4h-104.1z" style="fill:var(--s3)"><title>Go memory: 181</title></path>
+<text class="value" x="258.1" y="232.0">181</text>
+<text class="ratio" x="258.1" y="247.0">0.73× vs Rust</text>
+<text class="panel" x="406" y="74">Batch encode, 64 chunks · MB/s</text>
+<line class="grid" x1="406" y1="84" x2="406" y2="250"/>
+<path d="M407.0,92.0h130.5a4,4 0 0 1 4,4v12.0a4,4 0 0 1 -4,4h-130.5z" style="fill:var(--rust)"><title>Rust (original): 1450</title></path>
+<text class="value" x="548.5" y="106.0">1450</text>
+<path d="M407.0,134.0h150.0a4,4 0 0 1 4,4v12.0a4,4 0 0 1 -4,4h-150.0z" style="fill:var(--s1)"><title>Go speed: 1660</title></path>
+<text class="value" x="568.0" y="148.0">1660</text>
+<text class="ratio" x="568.0" y="163.0">1.15× vs Rust</text>
+<path d="M407.0,176.0h132.7a4,4 0 0 1 4,4v12.0a4,4 0 0 1 -4,4h-132.7z" style="fill:var(--s2)"><title>Go balanced: 1474</title></path>
+<text class="value" x="550.7" y="190.0">1474</text>
+<text class="ratio" x="550.7" y="205.0">1.02× vs Rust</text>
+<path d="M407.0,218.0h96.2a4,4 0 0 1 4,4v12.0a4,4 0 0 1 -4,4h-96.2z" style="fill:var(--s3)"><title>Go memory: 1080</title></path>
+<text class="value" x="514.2" y="232.0">1080</text>
+<text class="ratio" x="514.2" y="247.0">0.75× vs Rust</text>
+<text class="panel" x="670" y="74">Trie memory · MiB</text>
+<line class="grid" x1="670" y1="84" x2="670" y2="250"/>
+<text class="ratio" x="678" y="106.0">—</text>
+<path d="M671.0,134.0h150.0a4,4 0 0 1 4,4v12.0a4,4 0 0 1 -4,4h-150.0z" style="fill:var(--s1)"><title>Go speed: 16.23</title></path>
+<text class="value" x="832.0" y="148.0">16.23</text>
+<path d="M671.0,176.0h27.7a4,4 0 0 1 4,4v12.0a4,4 0 0 1 -4,4h-27.7z" style="fill:var(--s2)"><title>Go balanced: 3.34</title></path>
+<text class="value" x="709.7" y="190.0">3.34</text>
+<path d="M671.0,218.0h17.9a4,4 0 0 1 4,4v12.0a4,4 0 0 1 -4,4h-17.9z" style="fill:var(--s3)"><title>Go memory: 2.31</title></path>
+<text class="value" x="699.9" y="232.0">2.31</text>
+<text class="note" x="24" y="298">Apple M5 · Go 1.27.1 · Rust 1.98.1 · 4.1 MB mixed corpus · median of 5 runs · higher throughput / lower memory is better</text>
+</svg>
