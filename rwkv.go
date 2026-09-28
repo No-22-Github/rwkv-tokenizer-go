@@ -1,4 +1,4 @@
-// Package rwkv implements the RWKV "World" tokenizer used by RWKV v5 and
+// Package rwkvtok implements the RWKV "World" tokenizer used by RWKV v5 and
 // newer models.
 //
 // It is a pure-Go port of the reference Rust implementation at
@@ -10,14 +10,14 @@
 // The standard vocab (rwkv_vocab_v20230424.txt, 65529 tokens) is embedded in
 // the package, so New works out of the box:
 //
-//	tok, err := rwkv.New()
+//	tok, err := rwkvtok.New()
 //	ids := tok.Encode("Today is a beautiful day. 今天是美好的一天。")
 //	text, err := tok.Decode(ids)
 //
 // Tokenization is single-threaded per Encode call and allocation-light;
 // EncodeBatch parallelizes across texts on all available cores, and
 // AppendEncode / AppendEncodeBytes let callers reuse the output buffer.
-package rwkv
+package rwkvtok
 
 import (
 	"errors"
@@ -52,7 +52,7 @@ func New(opts ...Option) (*Tokenizer, error) {
 func NewFromFile(path string, opts ...Option) (*Tokenizer, error) {
 	b, err := os.ReadFile(path)
 	if err != nil {
-		return nil, fmt.Errorf("rwkv: %w", err)
+		return nil, fmt.Errorf("rwkvtok: %w", err)
 	}
 	return NewFromBytes(b, opts...)
 }
@@ -61,7 +61,7 @@ func NewFromFile(path string, opts ...Option) (*Tokenizer, error) {
 func NewFromReader(r io.Reader, opts ...Option) (*Tokenizer, error) {
 	b, err := io.ReadAll(r)
 	if err != nil {
-		return nil, fmt.Errorf("rwkv: %w", err)
+		return nil, fmt.Errorf("rwkvtok: %w", err)
 	}
 	return NewFromBytes(b, opts...)
 }
@@ -177,7 +177,7 @@ func (t *Tokenizer) Decode(ids []int32) (string, error) {
 		return "", err
 	}
 	if !utf8.Valid(b) {
-		return "", errors.New("rwkv: decoded token sequence is not valid UTF-8")
+		return "", errors.New("rwkvtok: decoded token sequence is not valid UTF-8")
 	}
 	return string(b), nil
 }
@@ -188,7 +188,7 @@ func (t *Tokenizer) DecodeBytes(ids []int32) ([]byte, error) {
 	total := 0
 	for _, id := range ids {
 		if id < 0 || int(id) >= len(tokens) || tokens[id] == nil {
-			return nil, fmt.Errorf("rwkv: invalid token id %d", id)
+			return nil, fmt.Errorf("rwkvtok: invalid token id %d", id)
 		}
 		total += len(tokens[id])
 	}

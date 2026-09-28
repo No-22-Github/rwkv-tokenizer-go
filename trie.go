@@ -1,4 +1,4 @@
-package rwkv
+package rwkvtok
 
 import "sort"
 

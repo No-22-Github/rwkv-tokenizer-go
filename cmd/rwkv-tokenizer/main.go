@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	rwkv "github.com/No-22-Github/rwkv-tokenizer-go"
+	rwkvtok "github.com/No-22-Github/rwkv-tokenizer-go"
 )
 
 func fatal(err error) {
@@ -64,11 +64,11 @@ flags:
 `)
 }
 
-func loadTokenizer(vocabPath, preset string) (*rwkv.Tokenizer, error) {
+func loadTokenizer(vocabPath, preset string) (*rwkvtok.Tokenizer, error) {
 	if vocabPath == "" {
-		return rwkv.New(rwkv.WithPreset(rwkv.Preset(preset)))
+		return rwkvtok.New(rwkvtok.WithPreset(rwkvtok.Preset(preset)))
 	}
-	return rwkv.NewFromFile(vocabPath, rwkv.WithPreset(rwkv.Preset(preset)))
+	return rwkvtok.NewFromFile(vocabPath, rwkvtok.WithPreset(rwkvtok.Preset(preset)))
 }
 
 func readInput(path string) ([]byte, error) {
@@ -194,7 +194,7 @@ func cmdBench(args []string) error {
 	return nil
 }
 
-func benchSingle(tok *rwkv.Tokenizer, data []byte, warmup, iters int, load time.Duration) {
+func benchSingle(tok *rwkvtok.Tokenizer, data []byte, warmup, iters int, load time.Duration) {
 	text := string(data) // one-time conversion; Encode views strings without copying
 	var total int
 	for range warmup {
@@ -208,7 +208,7 @@ func benchSingle(tok *rwkv.Tokenizer, data []byte, warmup, iters int, load time.
 	report("encode (single-thread)", load, len(data), total, iters, elapsed, runtime.GOMAXPROCS(0), tok.Preset())
 }
 
-func benchBatch(tok *rwkv.Tokenizer, data []byte, warmup, iters, chunks int, load time.Duration) {
+func benchBatch(tok *rwkvtok.Tokenizer, data []byte, warmup, iters, chunks int, load time.Duration) {
 	texts := splitChunks(data, chunks)
 	var total int
 	for range warmup {
@@ -256,7 +256,7 @@ func splitChunks(data []byte, n int) []string {
 	return texts
 }
 
-func report(name string, load time.Duration, bytes, tokens, iters int, elapsed time.Duration, threads int, preset rwkv.Preset) {
+func report(name string, load time.Duration, bytes, tokens, iters int, elapsed time.Duration, threads int, preset rwkvtok.Preset) {
 	perIter := elapsed / time.Duration(iters)
 	mbps := float64(bytes) * float64(iters) / 1e6 / elapsed.Seconds()
 	mtoks := float64(tokens) * float64(iters) / 1e6 / elapsed.Seconds()

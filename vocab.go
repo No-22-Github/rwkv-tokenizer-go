@@ -1,4 +1,4 @@
-package rwkv
+package rwkvtok
 
 import (
 	"bytes"
@@ -25,7 +25,7 @@ type vocabEntry struct {
 func loadDefaultVocab() ([]byte, error) {
 	b, err := defaultVocab.ReadFile(defaultVocabPath)
 	if err != nil {
-		return nil, fmt.Errorf("rwkv: reading embedded vocab: %w", err)
+		return nil, fmt.Errorf("rwkvtok: reading embedded vocab: %w", err)
 	}
 	return b, nil
 }
@@ -44,13 +44,13 @@ func parseVocab(data []byte) (entries []vocabEntry, tokens [][]byte, err error) 
 	for lineNo, line := range splitLines(data) {
 		id, content, declLen, err := parseVocabLine(line)
 		if err != nil {
-			return nil, nil, fmt.Errorf("rwkv: vocab line %d: %w", lineNo+1, err)
+			return nil, nil, fmt.Errorf("rwkvtok: vocab line %d: %w", lineNo+1, err)
 		}
 		if int(id) < len(tokens) && tokens[id] != nil {
-			return nil, nil, fmt.Errorf("rwkv: vocab line %d: duplicate id %d", lineNo+1, id)
+			return nil, nil, fmt.Errorf("rwkvtok: vocab line %d: duplicate id %d", lineNo+1, id)
 		}
 		if declLen != len(content) {
-			return nil, nil, fmt.Errorf("rwkv: vocab line %d: declared length %d != decoded length %d", lineNo+1, declLen, len(content))
+			return nil, nil, fmt.Errorf("rwkvtok: vocab line %d: declared length %d != decoded length %d", lineNo+1, declLen, len(content))
 		}
 		for int(id) >= len(tokens) {
 			tokens = append(tokens, nil)

@@ -10,7 +10,7 @@ later). It produces token ids that are byte-for-byte identical to the original
 Rust implementation, embeds the standard vocabulary, and has zero dependencies.
 
 ```go
-tok, _ := rwkv.New() // standard vocab is embedded, no files needed
+tok, _ := rwkvtok.New() // standard vocab is embedded, no files needed
 ids := tok.Encode("Today is a beautiful day. 今天是美好的一天。")
 // [33520 4600 332 59219 21509 47 33 10381 11639 13091 15597 11685 14734 10250 11639 10080]
 text, _ := tok.Decode(ids)
@@ -42,16 +42,16 @@ text, _ := tok.Decode(ids)
 go get github.com/No-22-Github/rwkv-tokenizer-go
 ```
 
-Requires Go 1.24 or later. The package name is `rwkv`:
+Requires Go 1.24 or later. The package name is `rwkvtok`:
 
 ```go
-import rwkv "github.com/No-22-Github/rwkv-tokenizer-go"
+import rwkvtok "github.com/No-22-Github/rwkv-tokenizer-go"
 ```
 
 Basic usage:
 
 ```go
-tok, err := rwkv.New()
+tok, err := rwkvtok.New()
 if err != nil {
 	log.Fatal(err)
 }
@@ -69,7 +69,7 @@ b, _ := tok.DecodeBytes(raw)               // -> []byte{0xff, 0xfe}
 Load a custom vocabulary in the same [format](#vocab-format):
 
 ```go
-tok, err := rwkv.NewFromFile("my_vocab.txt")
+tok, err := rwkvtok.NewFromFile("my_vocab.txt")
 ```
 
 ## Presets
@@ -78,9 +78,9 @@ Pick the memory/speed tradeoff once, at construction time. All presets produce
 the same ids and work with custom vocabularies.
 
 ```go
-tok, _ := rwkv.New()                                        // PresetSpeed (default)
-tok, _ := rwkv.New(rwkv.WithPreset(rwkv.PresetBalanced))
-tok, _ := rwkv.NewFromFile("vocab.txt", rwkv.WithPreset(rwkv.PresetMemory))
+tok, _ := rwkvtok.New()                                        // PresetSpeed (default)
+tok, _ := rwkvtok.New(rwkvtok.WithPreset(rwkvtok.PresetBalanced))
+tok, _ := rwkvtok.NewFromFile("vocab.txt", rwkvtok.WithPreset(rwkvtok.PresetMemory))
 ```
 
 | Preset | CLI | Trie memory | Single / batch encode | Layout |

@@ -9,7 +9,7 @@
 输出的 token id 与 Rust 原作逐字节一致，内置标准词表，零依赖。
 
 ```go
-tok, _ := rwkv.New() // 标准词表已内嵌，无需额外文件
+tok, _ := rwkvtok.New() // 标准词表已内嵌，无需额外文件
 ids := tok.Encode("Today is a beautiful day. 今天是美好的一天。")
 // [33520 4600 332 59219 21509 47 33 10381 11639 13091 15597 11685 14734 10250 11639 10080]
 text, _ := tok.Decode(ids)
@@ -37,16 +37,16 @@ text, _ := tok.Decode(ids)
 go get github.com/No-22-Github/rwkv-tokenizer-go
 ```
 
-需要 Go 1.24 及以上。包名为 `rwkv`：
+需要 Go 1.24 及以上。包名为 `rwkvtok`：
 
 ```go
-import rwkv "github.com/No-22-Github/rwkv-tokenizer-go"
+import rwkvtok "github.com/No-22-Github/rwkv-tokenizer-go"
 ```
 
 基本用法：
 
 ```go
-tok, err := rwkv.New()
+tok, err := rwkvtok.New()
 if err != nil {
 	log.Fatal(err)
 }
@@ -64,7 +64,7 @@ b, _ := tok.DecodeBytes(raw)               // -> []byte{0xff, 0xfe}
 加载同[格式](#词表格式)的自定义词表：
 
 ```go
-tok, err := rwkv.NewFromFile("my_vocab.txt")
+tok, err := rwkvtok.NewFromFile("my_vocab.txt")
 ```
 
 ## 预设
@@ -72,9 +72,9 @@ tok, err := rwkv.NewFromFile("my_vocab.txt")
 在构造时一次性选定内存与速度的取舍。所有预设输出相同的 id，也都支持自定义词表。
 
 ```go
-tok, _ := rwkv.New()                                        // PresetSpeed（默认）
-tok, _ := rwkv.New(rwkv.WithPreset(rwkv.PresetBalanced))
-tok, _ := rwkv.NewFromFile("vocab.txt", rwkv.WithPreset(rwkv.PresetMemory))
+tok, _ := rwkvtok.New()                                        // PresetSpeed（默认）
+tok, _ := rwkvtok.New(rwkvtok.WithPreset(rwkvtok.PresetBalanced))
+tok, _ := rwkvtok.NewFromFile("vocab.txt", rwkvtok.WithPreset(rwkvtok.PresetMemory))
 ```
 
 | 预设 | CLI 参数 | Trie 内存 | 单线程 / 批量编码 | 结构 |

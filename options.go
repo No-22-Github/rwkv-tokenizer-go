@@ -1,4 +1,4 @@
-package rwkv
+package rwkvtok
 
 import "fmt"
 
@@ -34,7 +34,7 @@ func WithPreset(preset Preset) Option {
 			o.preset = preset
 			return nil
 		default:
-			return fmt.Errorf("rwkv: unknown preset %q (want speed, balanced, or memory)", preset)
+			return fmt.Errorf("rwkvtok: unknown preset %q (want speed, balanced, or memory)", preset)
 		}
 	}
 }
@@ -43,7 +43,7 @@ func resolveOptions(opts []Option) (tokenizerOptions, error) {
 	o := tokenizerOptions{preset: PresetSpeed}
 	for _, opt := range opts {
 		if opt == nil {
-			return o, fmt.Errorf("rwkv: nil option")
+			return o, fmt.Errorf("rwkvtok: nil option")
 		}
 		if err := opt(&o); err != nil {
 			return o, err
