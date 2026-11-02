@@ -30,6 +30,10 @@ func loadDefaultVocab() ([]byte, error) {
 	return b, nil
 }
 
+// DefaultVocab returns a copy of the embedded vocab file, for code that needs
+// it on disk, such as an inference engine that only accepts a path.
+func DefaultVocab() ([]byte, error) { return loadDefaultVocab() }
+
 // parseVocab parses a vocab file where each line has the form
 //
 //	<id> (b?)'<python-escaped content>' <byte length>

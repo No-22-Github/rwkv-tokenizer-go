@@ -20,7 +20,11 @@ const (
 
 type tokenizerOptions struct {
 	preset Preset
+	eod    bool
 }
+
+// eodMarker is the end-of-document marker text; see WithEOD.
+const eodMarker = "<EOD>"
 
 // Option configures a Tokenizer at construction time.
 type Option func(*tokenizerOptions) error
@@ -36,6 +40,16 @@ func WithPreset(preset Preset) Option {
 		default:
 			return fmt.Errorf("rwkvtok: unknown preset %q (want speed, balanced, or memory)", preset)
 		}
+	}
+}
+
+// WithEOD encodes the literal text "<EOD>" as token 0 and decodes token 0 back
+// to it, as the rwkv_lightning server's tokenizer does. The reference tokenizer
+// does not, so this is off by default.
+func WithEOD() Option {
+	return func(o *tokenizerOptions) error {
+		o.eod = true
+		return nil
 	}
 }
 

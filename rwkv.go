@@ -20,6 +20,8 @@
 package rwkvtok
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -36,6 +38,8 @@ import (
 type Tokenizer struct {
 	trie   *trie
 	tokens [][]byte // indexed by token id; entry 0 is a NUL placeholder
+	sha256 string   // hex digest of the vocab file bytes
+	bufs   sync.Pool
 }
 
 // New returns a Tokenizer using the embedded vocab and optional settings.
@@ -76,7 +80,19 @@ func NewFromBytes(data []byte, opts ...Option) (*Tokenizer, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Tokenizer{trie: buildTrie(entries, o.preset), tokens: tokens}, nil
+	if o.eod {
+		// No vocab token starts with "<EOD", so this only adds a branch: greedy
+		// matching emits token 0 where it lands on a marker, and a longer token
+		// that straddles one (".<", "<<") still wins.
+		tokens[0] = []byte(eodMarker)
+		entries = append(entries, vocabEntry{id: 0, bytes: tokens[0]})
+	}
+	digest := sha256.Sum256(data)
+	return &Tokenizer{
+		trie:   buildTrie(entries, o.preset),
+		tokens: tokens,
+		sha256: hex.EncodeToString(digest[:]),
+	}, nil
 }
 
 // Encode tokenizes text into RWKV World token ids.
@@ -199,9 +215,13 @@ func (t *Tokenizer) DecodeBytes(ids []int32) ([]byte, error) {
 	return buf, nil
 }
 
-// VocabSize returns the number of token slots, vocab id 0 (a NUL placeholder)
-// included.
+// VocabSize returns the number of token slots, vocab id 0 (a NUL placeholder,
+// or "<EOD>" under WithEOD) included.
 func (t *Tokenizer) VocabSize() int { return len(t.tokens) }
 
 // Preset returns the immutable layout selected when the tokenizer was created.
 func (t *Tokenizer) Preset() Preset { return t.trie.preset }
+
+// VocabSHA256 returns the hex SHA-256 of the vocab file bytes, so that a
+// manifest can pin which vocabulary produced its counts.
+func (t *Tokenizer) VocabSHA256() string { return t.sha256 }

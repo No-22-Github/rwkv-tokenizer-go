@@ -107,6 +107,8 @@ go install github.com/No-22-Github/rwkv-tokenizer-go/cmd/rwkv-tokenizer@latest
 echo "你好，世界" | rwkv-tokenizer encode                  # text -> ids
 rwkv-tokenizer decode <<< "10381 11639 13091"             # ids -> text
 rwkv-tokenizer encode -preset memory -in corpus.txt       # choose a preset
+rwkv-tokenizer count -in corpus.txt                       # count tokens
+rwkv-tokenizer count -jsonl -in rows.jsonl                # add <field>_tok to each JSON line
 rwkv-tokenizer bench -in corpus.txt -iters 20             # single-thread throughput
 rwkv-tokenizer bench -in corpus.txt -iters 20 -batch 64   # parallel throughput
 rwkv-tokenizer dump -in corpus.txt -out ids.bin           # binary: u32 count + u32 LE ids
@@ -169,6 +171,12 @@ func NewFromFile(path string, opts ...Option) (*Tokenizer, error)
 func NewFromReader(r io.Reader, opts ...Option) (*Tokenizer, error)
 func NewFromBytes(data []byte, opts ...Option) (*Tokenizer, error)
 func WithPreset(preset Preset) Option
+func WithEOD() Option                                           // "<EOD>" as token 0, like rwkv_lightning
+func DefaultVocab() ([]byte, error)
+func (t *Tokenizer) Count(text string) int
+func (t *Tokenizer) CountBytes(data []byte) int
+func (t *Tokenizer) CountJSONL(dst io.Writer, src io.Reader) error
+func (t *Tokenizer) VocabSHA256() string
 
 func (t *Tokenizer) Encode(text string) []int32
 func (t *Tokenizer) AppendEncode(dst []int32, text string) []int32

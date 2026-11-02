@@ -1,6 +1,6 @@
 // Command rwkv-tokenizer is a CLI for the RWKV World tokenizer: it encodes
-// text to token ids, decodes ids back to text, dumps ids in a binary format
-// for cross-implementation checks, and benchmarks throughput.
+// text to token ids, decodes ids back to text, counts tokens, dumps ids in a
+// binary format for cross-implementation checks, and benchmarks throughput.
 package main
 
 import (
@@ -33,6 +33,8 @@ func main() {
 		err = cmdEncode(os.Args[2:])
 	case "decode":
 		err = cmdDecode(os.Args[2:])
+	case "count":
+		err = cmdCount(os.Args[2:])
 	case "dump":
 		err = cmdDump(os.Args[2:])
 	case "bench":
@@ -52,6 +54,9 @@ func usage() {
 commands:
   encode [-vocab FILE] [-in FILE]      print space-separated token ids for the input text
   decode [-vocab FILE] [-in FILE]      print the text for whitespace-separated token ids
+  count  [-vocab FILE] [-in FILE] [-eod] [-jsonl]
+                                       print the token count; with -jsonl, copy JSON Lines
+                                       adding a <field>_tok count per string field
   dump   [-vocab FILE] -in FILE -out FILE
                                        write ids as binary (uint32 count, then uint32 LE ids)
   bench  [-vocab FILE] -in FILE [-iters N] [-batch K] [-warmup W]
@@ -107,6 +112,45 @@ func cmdEncode(args []string) error {
 		w.WriteString(strconv.Itoa(int(id)))
 	}
 	return w.Flush()
+}
+
+func cmdCount(args []string) error {
+	fs, vocabPath, in, preset := tokenFlagSet()
+	eod := fs.Bool("eod", false, `encode the text "<EOD>" as token 0`)
+	jsonl := fs.Bool("jsonl", false, "copy JSON Lines, adding <field>_tok per string field")
+	fs.Parse(args)
+	opts := []rwkvtok.Option{rwkvtok.WithPreset(rwkvtok.Preset(*preset))}
+	if *eod {
+		opts = append(opts, rwkvtok.WithEOD())
+	}
+	var tok *rwkvtok.Tokenizer
+	var err error
+	if *vocabPath == "" {
+		tok, err = rwkvtok.New(opts...)
+	} else {
+		tok, err = rwkvtok.NewFromFile(*vocabPath, opts...)
+	}
+	if err != nil {
+		return err
+	}
+	if *jsonl {
+		src := io.Reader(os.Stdin)
+		if *in != "" {
+			f, err := os.Open(*in)
+			if err != nil {
+				return err
+			}
+			defer f.Close()
+			src = f
+		}
+		return tok.CountJSONL(os.Stdout, src)
+	}
+	data, err := readInput(*in)
+	if err != nil {
+		return err
+	}
+	fmt.Println(tok.CountBytes(data))
+	return nil
 }
 
 func cmdDecode(args []string) error {
